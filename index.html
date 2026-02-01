@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>KAUO VERSE AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;font-family:system-ui,-apple-system;overflow:hidden;background:black;}
+body{user-select:none;}
+.bubble.ai{user-select:text;}
+
+/* BACKGROUND VIDEO */
+.bg{position:fixed;inset:0;z-index:-2;}
+.bg video{width:100%;height:100%;object-fit:cover;filter:brightness(.6);}
+
+/* HEADER */
+.header{position:fixed;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:flex-start;z-index:5;}
+.back{width:46px;height:46px;border-radius:50%;background:rgba(255,80,80,.25);backdrop-filter:blur(20px);color:white;font-size:22px;border:none;cursor:pointer;box-shadow:0 0 25px rgba(255,60,60,1);}
+.back:active{transform:scale(.92)}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand img{width:32px;height:32px;border-radius:50%;}
+.brand-text h3{font-family:'Orbitron',system-ui;font-size:14px;letter-spacing:1px;color:white;text-shadow:0 0 12px rgba(255,60,60,1);}
+.brand-text p{font-size:11px;color:#ffd6d6;opacity:.8;}
+
+/* CHAT */
+.chat{position:fixed;top:90px;bottom:86px;left:0;right:0;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;z-index:2;}
+.bubble{max-width:82%;padding:14px 16px;border-radius:18px;backdrop-filter:blur(20px);background:rgba(255,80,80,.22);color:white;box-shadow:0 0 25px rgba(255,60,60,.9);word-wrap:break-word;}
+.bubble.user{align-self:flex-end;background:rgba(255,40,40,.35);}
+.bubble.ai{align-self:flex-start;}
+.cursor{display:inline-block;width:8px;height:1em;background:#ffd6d6;margin-left:2px;animation:blink 1s infinite;}
+@keyframes blink{50%{opacity:0}}
+
+/* INPUT BAR */
+.input-bar{position:fixed;bottom:0;left:0;right:0;padding:14px;background:rgba(0,0,0,.45);backdrop-filter:blur(20px);display:flex;gap:10px;z-index:5;}
+.input-bar input{flex:1;padding:14px;border-radius:18px;border:none;outline:none;background:rgba(255,80,80,.25);color:white;box-shadow:0 0 25px rgba(255,60,60,1);font-size:15px;}
+.send{width:52px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#ff6b6b,#ff1f1f);box-shadow:0 0 25px rgba(255,60,60,1);color:white;font-weight:bold;}
+.send:active{transform:scale(.92)}
+</style>
+</head>
+<body>
+<div class="bg">
+  <video src="bg.mp4" autoplay loop muted playsinline></video>
+</div>
+
+<div class="header">
+  <div class="brand">
+    <img src="logo.png" alt="">
+    <div class="brand-text">
+      <h3>KAUO VERSE AI V1.0</h3>
+      <p>Gemini AI Model</p>
+    </div>
+  </div>
+  <button class="back" onclick="location.href='page2.html'">⟨</button>
+</div>
+
+<div class="chat" id="chat"></div>
+
+<div class="input-bar">
+  <input id="input" placeholder="Tulis pesan...">
+  <button class="send" onclick="send()">➤</button>
+</div>
+
+<script>
+const chat=document.getElementById("chat");
+const input=document.getElementById("input");
+
+function addBubble(text,type="ai"){
+  const b=document.createElement("div");
+  b.className="bubble "+type;
+  if(type==="ai"){typeText(b,text);}else{b.innerText=text;}
+  chat.appendChild(b);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+function typeText(el,text){
+  el.classList.add("ai");
+  el.innerHTML="";
+  let i=0;
+  const cursor=document.createElement("span");
+  cursor.className="cursor";
+  el.appendChild(cursor);
+  const t=setInterval(()=>{
+    cursor.insertAdjacentText("beforebegin",text[i]);
+    i++;
+    chat.scrollTop=chat.scrollHeight;
+    if(i>=text.length){clearInterval(t);cursor.remove();}
+  },22);
+}
+
+/* FIRST MESSAGE */
+addBubble("Halo 👋, Selamat Datang di KAUO AI. Mari memulai obrolan pertama mu!","ai");
+
+/* SEND MESSAGE */
+async function send(){
+  if(!input.value.trim())return;
+  const text=input.value;
+  input.value="";
+  addBubble(text,"user");
+
+  try{
+    const res=await fetch("/api/generate",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({prompt:text})
+    });
+    const data=await res.json();
+    addBubble(data.reply,"ai");
+  }catch(err){
+    addBubble("Terjadi kesalahan koneksi. Coba lagi.","ai");
+  }
+}
+</script>
+</body>
+</html>
